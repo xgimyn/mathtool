@@ -1,5 +1,6 @@
 import math
 import sys
+from calc import equation
 MAX_VALUE = -5
 if MAX_VALUE < 0:
     MAX_VALUE = MAX_VALUE * -1
