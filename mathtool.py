@@ -1,6 +1,8 @@
 import math
 import sys
-
+MAX_VALUE = -5
+if MAX_VALUE < 0:
+    MAX_VALUE = MAX_VALUE * -1
 # Проверка вызова справки или отсутствия аргументов
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == "--help"):
     print("mathtool — решение уравнений вида A*x^2 + B*x + C = 0")
@@ -9,11 +11,11 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == "--help"):
     print("    python mathtool.py --help                  вывод справки")
     print("    python mathtool.py solve                   ввод коэффициентов с клавиатуры")
     print("    python mathtool.py solve -a 1 -b -3 -c 2   решение с заданными коэффициентами")
-    print("Коэффициенты A, B, C — целые числа, по модулю не превышающие 10000.")
+    print(f"Коэффициенты A, B, C — целые числа, по модулю не превышающие {MAX_VALUE}.")
     sys.exit(0)
 
 # Проверка, что первая команда - это solve
-if sys.argv[1] != "solve":
+if sys.argv[1] not in ("solve", "sol"):
     print("ОШИБКА: неизвестная команда", file=sys.stderr)
     sys.exit(1)
 
@@ -45,9 +47,9 @@ except ValueError:
     sys.exit(1)
 
 # Проверка диапазона до 10000
-MAX_VALUE = 10000
+
 if abs(a) > MAX_VALUE or abs(b) > MAX_VALUE or abs(c) > MAX_VALUE:
-    print("ОШИБКА: значение вне допустимого диапазона", file=sys.stderr)
+    print(f"от {MAX_VALUE * -1} до {MAX_VALUE}", file=sys.stderr)
     sys.exit(1)
 
 # Решение уравнения
@@ -55,8 +57,10 @@ if a == 0:
     if b != 0:
         print("Уравнение линейное")
         x = -c / b
+        x = int(x)
         print(f"x = {x:.3f}")
         sys.exit(0)
+
     else:
         print("ОШИБКА: это не уравнение, неизвестное отсутствует", file=sys.stderr)
         sys.exit(1)
@@ -68,6 +72,11 @@ else:
     if D > 0:
         x1 = (-b + math.sqrt(D)) / (2 * a)
         x2 = (-b - math.sqrt(D)) / (2 * a)
+    #    if x1.is_integer():
+    #         x1 = int(x1)
+    #     if x2.is_integer():
+    #          x2 = int(x2)
+
         print(f"x1 = {x1:.3f}")
         print(f"x2 = {x2:.3f}")
     elif D == 0:
