@@ -1,9 +1,6 @@
-import math
 import sys
 from calc import equation
-MAX_VALUE = -5
-if MAX_VALUE < 0:
-    MAX_VALUE = MAX_VALUE * -1
+
 # Проверка вызова справки или отсутствия аргументов
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == "--help"):
     print("mathtool — решение уравнений вида A*x^2 + B*x + C = 0")
@@ -12,11 +9,11 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == "--help"):
     print("    python mathtool.py --help                  вывод справки")
     print("    python mathtool.py solve                   ввод коэффициентов с клавиатуры")
     print("    python mathtool.py solve -a 1 -b -3 -c 2   решение с заданными коэффициентами")
-    print(f"Коэффициенты A, B, C — целые числа, по модулю не превышающие {MAX_VALUE}.")
+    print(f"Коэффициенты A, B, C — целые числа, по модулю не превышающие {equation.MAX_VALUE}.")
     sys.exit(0)
 
 # Проверка, что первая команда - это solve
-if sys.argv[1] not in ("solve", "sol"):
+if sys.argv[1] != "solve":
     print("ОШИБКА: неизвестная команда", file=sys.stderr)
     sys.exit(1)
 
@@ -47,42 +44,28 @@ except ValueError:
     print("ОШИБКА: коэффициент не является целым числом", file=sys.stderr)
     sys.exit(1)
 
-# Проверка диапазона до 10000
-
-if abs(a) > MAX_VALUE or abs(b) > MAX_VALUE or abs(c) > MAX_VALUE:
-    print(f"от {MAX_VALUE * -1} до {MAX_VALUE}", file=sys.stderr)
+# Решение уравнения через модуль calc.equation
+try:
+    kind, d, roots = equation.solve(a, b, c)
+except ValueError as error:
+    print(f"ОШИБКА: {error}", file=sys.stderr)
     sys.exit(1)
 
-# Решение уравнения
-if a == 0:
-    if b != 0:
-        print("Уравнение линейное")
-        x = -c / b
-        x = int(x)
-        print(f"x = {x:.3f}")
-        sys.exit(0)
-
-    else:
-        print("ОШИБКА: это не уравнение, неизвестное отсутствует", file=sys.stderr)
-        sys.exit(1)
+# Вывод результатов
+if kind == "линейное":
+    print("Уравнение линейное")
 else:
     print("Уравнение квадратное")
-    D = b * b - 4 * a * c
-    print(f"D = {D}")
 
-    if D > 0:
-        x1 = (-b + math.sqrt(D)) / (2 * a)
-        x2 = (-b - math.sqrt(D)) / (2 * a)
-    #    if x1.is_integer():
-    #         x1 = int(x1)
-    #     if x2.is_integer():
-    #          x2 = int(x2)
+if d is not None:
+    print(f"D = {d}")
 
-        print(f"x1 = {x1:.3f}")
-        print(f"x2 = {x2:.3f}")
-    elif D == 0:
-        x = -b / (2 * a)
-        print(f"x = {x:.3f}")
-    else:
-        print("Действительных корней нет")
-    sys.exit(0)
+if len(roots) == 0:
+    print("Действительных корней нет")
+elif len(roots) == 1:
+    print(f"x = {roots[0]:.3f}")
+else:
+    print(f"x1 = {roots[0]:.3f}")
+    print(f"x2 = {roots[1]:.3f}")
+
+sys.exit(0)
