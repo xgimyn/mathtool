@@ -1,71 +1,91 @@
 import sys
+import cli
 from calc import equation
 
-# Проверка вызова справки или отсутствия аргументов
-if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == "--help"):
-    print("mathtool — решение уравнений вида A*x^2 + B*x + C = 0")
-    print("Использование:")
-    print("    python mathtool.py                         вывод справки")
-    print("    python mathtool.py --help                  вывод справки")
-    print("    python mathtool.py solve                   ввод коэффициентов с клавиатуры")
-    print("    python mathtool.py solve -a 1 -b -3 -c 2   решение с заданными коэффициентами")
-    print(f"Коэффициенты A, B, C — целые числа, по модулю не превышающие {equation.MAX_VALUE}.")
-    sys.exit(0)
 
-# Проверка, что первая команда - это solve
-if sys.argv[1] != "solve":
-    print("ОШИБКА: неизвестная команда", file=sys.stderr)
-    sys.exit(1)
+# Обработка команды solve
+def handle_solve(args):
+    """Обрабатывает команду solve и возвращает код завершения."""
+    if args.a is None and args.b is None and args.c is None:
+        # Ввод коэффициентов с клавиатуры
+        try:
+            a = int(input("Введите A: "))
+            b = int(input("Введите B: "))
+            c = int(input("Введите C: "))
+        except ValueError:
+            raise ValueError("коэффициент не является целым числом")
+    elif args.a is not None and args.b is not None and args.c is not None:
+        # Коэффициенты переданы через аргументы
+        a = args.a
+        b = args.b
+        c = args.c
+    else:
+        # Задана только часть коэффициентов — ошибка в данных
+        raise ValueError("укажите все три коэффициента либо ни одного")
 
-# Получение строковых значений коэффициентов
-if len(sys.argv) == 2:
-    # Запуск только с командой solve -> ввод с клавиатуры
-    a_str = input("Введите A: ")
-    b_str = input("Введите B: ")
-    c_str = input("Введите C: ")
-elif len(sys.argv) == 8:
-    # Запуск с аргументами: mathtool.py solve -a 1 -b 2 -c 3
-    if sys.argv[2] != "-a" or sys.argv[4] != "-b" or sys.argv[6] != "-c":
-        print("ОШИБКА: неизвестный параметр", file=sys.stderr)
-        sys.exit(1)
-    a_str = sys.argv[3]
-    b_str = sys.argv[5]
-    c_str = sys.argv[7]
-else:
-    print("ОШИБКА: неверный набор параметров", file=sys.stderr)
-    sys.exit(1)
-
-# Преобразование строк в целые числа
-try:
-    a = int(a_str)
-    b = int(b_str)
-    c = int(c_str)
-except ValueError:
-    print("ОШИБКА: коэффициент не является целым числом", file=sys.stderr)
-    sys.exit(1)
-
-# Решение уравнения через модуль calc.equation
-try:
+    # Решение через модуль calc.equation
     kind, d, roots = equation.solve(a, b, c)
-except ValueError as error:
-    print(f"ОШИБКА: {error}", file=sys.stderr)
-    sys.exit(1)
 
-# Вывод результатов
-if kind == "линейное":
-    print("Уравнение линейное")
-else:
-    print("Уравнение квадратное")
+    # Вывод результатов
+    if kind == "линейное":
+        print("Уравнение линейное")
+    else:
+        print("Уравнение квадратное")
 
-if d is not None:
-    print(f"D = {d}")
+    if d is not None:
+        print(f"D = {d}")
 
-if len(roots) == 0:
-    print("Действительных корней нет")
-elif len(roots) == 1:
-    print(f"x = {roots[0]:.3f}")
-else:
-    print(f"x1 = {roots[0]:.3f}")
-    print(f"x2 = {roots[1]:.3f}")
+    if len(roots) == 0:
+        print("Действительных корней нет")
+    elif len(roots) == 1:
+        print(f"x = {roots[0]:.3f}")
+    else:
+        print(f"x1 = {roots[0]:.3f}")
+        print(f"x2 = {roots[1]:.3f}")
 
-sys.exit(0)
+    return 0
+
+
+# Обработчики для остальных команд (будут реализованы в следующих шагах)
+def handle_stats(args):
+    """Обработчик команды stats."""
+    return 0
+
+
+def handle_series(args):
+    """Обработчик команды series."""
+    return 0
+
+
+def handle_integrate(args):
+    """Обработчик команды integrate."""
+    return 0
+
+
+HANDLERS = {
+    "solve": handle_solve,
+    "stats": handle_stats,
+    "series": handle_series,
+    "integrate": handle_integrate,
+}
+
+
+# Точка входа: разбор аргументов и вызов обработчика
+def main(argv):
+    """Точка входа: разбирает параметры и вызывает обработчик команды."""
+    parser = cli.build_parser()
+    args = parser.parse_args(argv)
+
+    if args.command is None:
+        parser.print_help()
+        return 0
+
+    try:
+        return HANDLERS[args.command](args)
+    except (ValueError, OSError) as error:
+        print(f"ОШИБКА: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
